@@ -80,6 +80,33 @@ const ieltsPrompts = [
     id: 6,
     taskType: "task2",
     prompt: "Nowadays, many people complain that they have difficulties getting enough sleep. What problems can lack of sleep cause? What can be done about lack of sleep?",
+  },
+  // --- เพิ่มโจทย์ใหม่ต่อท้ายตรงนี้ได้เลย ---
+  {
+    id: 7,
+    taskType: "task1",
+    title: "Fast Food Consumption (Teenagers)",
+    type: "line",
+    prompt: "The graph below shows the amount of fast food consumed by teenagers (in millions) in a specific country from 2000 to 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    data: [
+      { year: '2000', Pizza: 20, Hamburger: 40, FriedChicken: 30 },
+      { year: '2005', Pizza: 35, Hamburger: 45, FriedChicken: 40 },
+      { year: '2010', Pizza: 50, Hamburger: 55, FriedChicken: 45 },
+      { year: '2015', Pizza: 70, Hamburger: 65, FriedChicken: 50 },
+      { year: '2020', Pizza: 85, Hamburger: 75, FriedChicken: 60 },
+    ],
+    colors: { Pizza: "#ef4444", Hamburger: "#f59e0b", FriedChicken: "#8b5a2b" },
+    dataDescription: "A line graph showing fast food consumption from 2000 to 2020. Pizza consumption grew the fastest, from 20 to 85. Hamburger and Fried Chicken also increased steadily over the 20-year period."
+  },
+  {
+    id: 8,
+    taskType: "task2",
+    prompt: "Some people think that the increasing use of computers and mobile phones for communication has had a negative effect on young people's reading and writing skills. To what extent do you agree or disagree?",
+  },
+  {
+    id: 9,
+    taskType: "task2",
+    prompt: "Global warming is one of the biggest threats to our environment. What causes global warming and what solutions are there to reduce this problem?",
   }
 ];
 

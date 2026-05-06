@@ -165,26 +165,41 @@ export default function App() {
       }`;
 
       // Call Gemini API via generic fetch (simulated env requires empty key logic handled by host)
-    const payload = {
+      const payload = {
         contents: [{ role: "user", parts: [{ text: aiPrompt }] }]
       };
 
-     const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY;
+      const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY;
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // --- เพิ่มระบบ Auto-Retry ตรงนี้ ---
+      let result;
+      let retries = 3; // พยายามส่งใหม่สูงสุด 3 ครั้ง
+      
+      for (let i = 0; i < retries; i++) {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || `API Error: ${response.status}`);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || '';
+          
+          // ถ้าเจอคำว่า high demand หรือ 503 ให้รอ 2 วินาทีแล้ววนลูปส่งใหม่
+          if ((errMsg.includes('high demand') || response.status === 503) && i < retries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue; // กลับไปเริ่มรอบใหม่
+          }
+          throw new Error(errMsg || `API Error: ${response.status}`);
+        }
+        
+        result = await response.json();
+        break; // สำเร็จแล้วออกจากลูป
       }
+      // -------------------------------
 
-      const result = await response.json();
-      
-      if (result.candidates && result.candidates.length > 0) {
+      if (result && result.candidates && result.candidates.length > 0) {
         let jsonText = result.candidates[0].content.parts[0].text;
         
         // Clean up markdown formatting if the model included them by mistake

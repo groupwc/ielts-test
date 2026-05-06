@@ -81,7 +81,6 @@ const ieltsPrompts = [
     taskType: "task2",
     prompt: "Nowadays, many people complain that they have difficulties getting enough sleep. What problems can lack of sleep cause? What can be done about lack of sleep?",
   },
-  // --- เพิ่มโจทย์ใหม่ต่อท้ายตรงนี้ได้เลย ---
   {
     id: 7,
     taskType: "task1",
@@ -191,16 +190,16 @@ export default function App() {
         "weaknesses": ["(string)", "(string)"]
       }`;
 
-      // Call Gemini API via generic fetch (simulated env requires empty key logic handled by host)
       const payload = {
         contents: [{ role: "user", parts: [{ text: aiPrompt }] }]
       };
 
       const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY;
       
-      // --- เพิ่มระบบ Auto-Retry ตรงนี้ ---
+      // --- อัปเกรดระบบ Auto-Retry เป็น Exponential Backoff ---
       let result;
-      let retries = 3; // พยายามส่งใหม่สูงสุด 3 ครั้ง
+      let retries = 5; // พยายามสูงสุด 5 ครั้ง
+      let delay = 2000; // เริ่มต้นรอที่ 2 วินาที
       
       for (let i = 0; i < retries; i++) {
         const response = await fetch(apiUrl, {
@@ -213,10 +212,17 @@ export default function App() {
           const errData = await response.json().catch(() => ({}));
           const errMsg = errData?.error?.message || '';
           
-          // ถ้าเจอคำว่า high demand หรือ 503 ให้รอ 2 วินาทีแล้ววนลูปส่งใหม่
-          if ((errMsg.includes('high demand') || response.status === 503) && i < retries - 1) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue; // กลับไปเริ่มรอบใหม่
+          // ตรวจจับ Error 503 (Service Unavailable) หรือ 429 (Too Many Requests) หรือข้อความ High demand
+          const isHighDemand = errMsg.toLowerCase().includes('high demand') || 
+                               response.status === 503 || 
+                               response.status === 429;
+          
+          if (isHighDemand && i < retries - 1) {
+            // ถ้าระบบโหลดหนัก ให้รอเวลาที่เพิ่มขึ้นเรื่อยๆ (2s -> 4s -> 8s -> 16s)
+            console.log(`AI Server is busy (Attempt ${i + 1}/${retries}). Retrying in ${delay / 1000} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // คูณ 2 เวลาที่ต้องรอในรอบถัดไป
+            continue; 
           }
           throw new Error(errMsg || `API Error: ${response.status}`);
         }
@@ -224,7 +230,7 @@ export default function App() {
         result = await response.json();
         break; // สำเร็จแล้วออกจากลูป
       }
-      // -------------------------------
+      // --------------------------------------------------
 
       if (result && result.candidates && result.candidates.length > 0) {
         let jsonText = result.candidates[0].content.parts[0].text;

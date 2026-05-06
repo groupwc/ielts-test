@@ -250,7 +250,15 @@ export default function App() {
 
     } catch (error) {
       console.error("Grading Error Details:", error);
-      setErrorMsg(`Error: ${error.message || 'Failed to grade the essay. Please try again.'}`);
+      
+      let displayError = error.message || 'Failed to grade the essay. Please try again.';
+      
+      // ดักจับ Error กรณีโควต้าฟรีเต็ม (Rate Limit Exceeded / Quota)
+      if (displayError.toLowerCase().includes('quota') || displayError.toLowerCase().includes('429')) {
+        displayError = '⏳ มีผู้ใช้งานพร้อมกันจำนวนมาก โควต้าฟรีรายนาทีเต็มชั่วคราว กรุณารอประมาณ 1 นาทีแล้วกดปุ่ม Submit ใหม่อีกครั้งนะครับ';
+      }
+      
+      setErrorMsg(displayError);
       setAppState('writing');
     }
   };

@@ -165,14 +165,11 @@ export default function App() {
       }`;
 
       // Call Gemini API via generic fetch (simulated env requires empty key logic handled by host)
-      const payload = {
-        contents: [{ role: "user", parts: [{ text: aiPrompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
+    const payload = {
+        contents: [{ role: "user", parts: [{ text: aiPrompt }] }]
       };
 
-     const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY;
+     const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY;
       
       const response = await fetch(apiUrl, {
         method: 'POST',
